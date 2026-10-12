@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Play Together — UNO en ligne</title>
+<style>
+:root{--red:#ed1c24;--blue:#0956bf;--green:#3fa535;--yellow:#fcd116;--ink:#f6f1ea;--muted:#b3a9bd;--bg:#120d1a;--panel:#201829;--line:#3a2f47}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{background:radial-gradient(ellipse at 50% 30%,#2e1a3a 0,#150f1d 60%,#0d0912 100%) fixed;color:var(--ink);font:16px/1.4 "Trebuchet MS","Segoe UI",system-ui,sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.hidden{display:none!important}
+button{font:inherit;cursor:pointer}
+button:focus-visible,.card:focus-visible,input:focus-visible{outline:3px solid var(--yellow);outline-offset:2px}
+
+/* En-tête */
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;padding-top:calc(12px + env(safe-area-inset-top))}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em}
+.logo{width:46px;height:30px;background:var(--red);border-radius:50%;display:grid;place-items:center;transform:rotate(-12deg);border:2px solid #fff;box-shadow:0 2px 0 #0006}
+.logo b{font:900 italic 15px/1 "Arial Black",Impact,sans-serif;color:var(--yellow);-webkit-text-stroke:.6px #000;transform:rotate(12deg)}
+.roomtag{color:var(--muted);font-size:.9rem}.hright{display:flex;align-items:center;gap:12px}.mute{background:#33283f;border:0;color:var(--ink);border-radius:50%;width:38px;height:38px;font-size:1.05rem}.pl .rm{margin-left:auto;background:none;border:0;color:var(--muted);font-size:1.2rem;padding:2px 6px}
+
+/* Écrans d'accueil / salon */
+.screen{max-width:560px;margin:0 auto;padding:10px 18px 40px}
+.screen h1{font:900 italic clamp(2.4rem,9vw,3.8rem)/1 "Arial Black",Impact,sans-serif;margin:18px 0 8px;color:var(--yellow);text-shadow:3px 3px 0 var(--red)}
+.screen p{color:var(--muted);margin:0 0 18px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;margin:14px 0}
+.panel h2{margin:0 0 12px;font-size:1.05rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+input{flex:1;min-width:0;background:#150f1d;color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:13px;font:inherit}
+.btn{border:0;border-radius:12px;padding:13px 18px;font-weight:800;background:var(--yellow);color:#201400;box-shadow:0 3px 0 #a88a00}
+.btn.red{background:var(--red);color:#fff;box-shadow:0 3px 0 #8d0a10}
+.btn.ghost{background:#33283f;color:var(--ink);box-shadow:0 3px 0 #1a1223}
+.btn:active{transform:translateY(2px);box-shadow:none}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.code{font:900 2.2rem/1 "Arial Black",Impact,sans-serif;letter-spacing:.18em;color:var(--yellow);margin:6px 0 14px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.pl{display:flex;align-items:center;gap:10px;background:#150f1d;border:1px solid var(--line);border-radius:12px;padding:9px 11px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#fff;border:2px solid #fff;flex:none}
+.pl small{color:var(--muted);display:block;line-height:1.1}
+
+/* Cartes */
+.card{--cw:68px;width:var(--cw);height:calc(var(--cw)*1.5);border-radius:calc(var(--cw)*.14);border:calc(var(--cw)*.055) solid #fff;position:relative;flex:none;overflow:hidden;background:var(--c);box-shadow:0 4px 10px #0008;user-select:none;-webkit-user-select:none}
+.card.red{--c:var(--red)}.card.blue{--c:var(--blue)}.card.green{--c:var(--green)}.card.yellow{--c:var(--yellow)}.card.wild{--c:#17141c}.card.back{--c:#17141c}
+.oval{position:absolute;left:11%;right:11%;top:9%;bottom:9%;background:#fff;border-radius:50%;transform:rotate(-27deg);display:grid;place-items:center;overflow:hidden}
+.big{transform:rotate(27deg);color:var(--c);font:900 italic calc(var(--cw)*.5)/1 "Arial Black",Impact,sans-serif;text-shadow:calc(var(--cw)*.025) calc(var(--cw)*.025) 0 #0003;display:grid;place-items:center}
+.big svg{width:calc(var(--cw)*.5);height:calc(var(--cw)*.5)}
+.corner{position:absolute;color:#fff;font:900 italic calc(var(--cw)*.2)/1 "Arial Black",Impact,sans-serif;text-shadow:1px 1px 0 #0007;display:grid;place-items:center}
+.corner svg{width:calc(var(--cw)*.2);height:calc(var(--cw)*.2)}
+.corner.tl{top:5%;left:9%}.corner.br{bottom:5%;right:9%;transform:rotate(180deg)}
+u{text-decoration-thickness:.08em;text-underline-offset:.05em}
+.wild .oval{background:conic-gradient(from 0deg,var(--red) 0 25%,var(--blue) 0 50%,var(--green) 0 75%,var(--yellow) 0)}
+.wild .big{color:#fff;text-shadow:0 2px 3px #000b}
+.back .oval{background:var(--red)}
+.back .big{color:var(--yellow);font-size:calc(var(--cw)*.3);-webkit-text-stroke:calc(var(--cw)*.012) #000}
+
+/* Partie */
+#game{display:flex;flex-direction:column;min-height:calc(100dvh - 60px - env(safe-area-inset-top));max-width:980px;margin:0 auto}
+#opps{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:4px 12px}
+.opp{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;border-radius:14px;border:2px solid transparent;min-width:92px}
+.opp.active{border-color:var(--yellow);background:#ffffff0f}
+.opp .nm{font-weight:800;font-size:.85rem;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opp .sub{font-size:.72rem;color:var(--muted)}
+.minis{display:flex;padding-left:8px;height:26px;align-items:center}
+.mini{width:17px;height:26px;margin-left:-9px;border-radius:4px;background:#17141c;border:2px solid #fff;position:relative;flex:none}
+.mini:after{content:"";position:absolute;inset:3px 1px;background:var(--red);border-radius:50%;transform:rotate(-27deg)}
+.tag{background:var(--red);color:var(--yellow);font:900 italic .75rem/1 "Arial Black",sans-serif;padding:3px 7px;border-radius:99px;border:1.5px solid #fff}
+.offline{opacity:.45}
+
+#table{flex:1;display:flex;align-items:center;justify-content:center;gap:clamp(22px,8vw,60px);padding:14px 10px;position:relative}
+.pile{position:relative;text-align:center}
+#drawPile .card{box-shadow:3px 3px 0 #000,6px 6px 0 #2b2333,9px 9px 0 #000,0 10px 18px #000a;--cw:84px}
+#drawPile.ready{cursor:pointer}
+#drawPile.ready .card{animation:pulse 1.3s ease-in-out infinite;border-color:var(--yellow)}
+@keyframes pulse{50%{transform:translateY(-6px)}}
+.cnt{display:block;margin-top:14px;color:var(--muted);font-size:.8rem}
+#discardWrap{position:relative}
+#discardWrap .card{--cw:96px}
+#ring{position:absolute;inset:-12px;border-radius:24px;box-shadow:0 0 0 4px var(--rc,#555),0 0 36px var(--rc,#555);transition:box-shadow .3s}
+#discard .card{animation:drop .28s ease-out}
+@keyframes drop{from{transform:translateY(-40px) rotate(-14deg) scale(1.15);opacity:.3}}
+#dir{position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:1.5rem;color:var(--muted);opacity:.7}
+#statusBar{text-align:center;padding:4px 14px;min-height:50px}
+#statusMain{font-weight:800;font-size:1.05rem}
+#statusMain.me{color:var(--yellow)}
+#statusLog{color:var(--muted);font-size:.85rem}
+
+#dock{position:sticky;bottom:0;background:linear-gradient(transparent,#0d0912 38%);padding:6px 0 calc(10px + env(safe-area-inset-bottom))}
+.actions{display:flex;justify-content:center;gap:10px;padding:0 12px;min-height:50px;align-items:center}
+.uno{background:var(--red);color:var(--yellow);font:900 italic 1.3rem/1 "Arial Black",Impact,sans-serif;border:3px solid #fff;border-radius:50%;width:64px;height:64px;box-shadow:0 4px 0 #8d0a10,0 0 22px #ed1c2488;-webkit-text-stroke:.8px #000;transform:rotate(-8deg)}
+.uno:active{transform:rotate(-8deg) translateY(3px)}
+#hand{display:flex;overflow-x:auto;padding:22px 24px 12px;justify-content:safe center;scrollbar-width:none}
+#hand::-webkit-scrollbar{display:none}
+#hand .card{--cw:76px;margin-left:calc(var(--cw)*-.3);transition:transform .15s;cursor:default}
+#hand .card:first-child{margin-left:0}
+#hand .card.playable{cursor:pointer;transform:translateY(-16px);box-shadow:0 8px 16px #000a,0 0 0 2px var(--yellow)}
+#hand .card.dim{filter:brightness(.55)}
+@media(max-width:520px){#hand .card{--cw:64px}#discardWrap .card{--cw:84px}#drawPile .card{--cw:72px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Fenêtres */
+.modal{position:fixed;inset:0;background:#000b;display:grid;place-items:center;padding:18px;z-index:10}
+.sheet{background:var(--panel);border:2px solid var(--line);border-radius:22px;padding:22px;max-width:420px;width:100%;text-align:center}
+.sheet h2{margin:0 0 6px;font-size:1.4rem}
+.sheet p{color:var(--muted);margin:0 0 16px}
+.swatches{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sw{height:84px;border:4px solid #fff;border-radius:50% / 40%;transform:rotate(-8deg);font-weight:900;color:#fff;font-size:1.1rem;text-shadow:0 2px 3px #0008}
+.sw.yellow{color:#222;text-shadow:none}
+.score{display:flex;justify-content:space-between;padding:8px 12px;border-radius:10px;background:#150f1d;margin:6px 0;text-align:left}
+.score.win{outline:2px solid var(--yellow)}
+.stack{display:flex;gap:10px;margin-top:16px}.stack .btn{flex:1}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:var(--red);color:#fff;font-weight:700;padding:10px 16px;border-radius:12px;border:2px solid #fff;z-index:20;max-width:90vw;text-align:center}
+</style></head>
+<body>
+<header>
+  <div class="brand"><div class="logo"><b>UNO</b></div><span>Play Together</span></div>
+  <div class="hright"><span class="roomtag" id="roomTag"></span><button class="mute" id="mute" aria-label="Activer ou couper le son">🔊</button></div>
+</header>
+
+<main id="entry" class="screen">
+  <h1>Joue avec tes amis, où qu’ils soient.</h1>
+  <p>Un salon, un code, et chacun joue sur son téléphone. 2 à 8 joueurs.</p>
+  <section class="panel">
+    <h2>Ton pseudo</h2>
+    <div class="row"><input id="name" maxlength="18" placeholder="Ton prénom ou pseudo" autocomplete="nickname"></div>
+  </section>
+  <section class="panel">
+    <h2>Rejoindre un salon</h2>
+    <div class="row"><input id="joinCode" maxlength="5" placeholder="Code" style="text-transform:uppercase;letter-spacing:.2em;max-width:140px"><button class="btn" id="join">Rejoindre</button></div>
+  </section>
+  <section class="panel">
+    <h2>Ou crée ta table</h2>
+    <button class="btn red" id="create">Créer un salon</button>
+  </section>
+</main>
+
+<main id="lobby" class="screen hidden">
+  <h1>Salon prêt</h1>
+  <section class="panel">
+    <div class="muted">Code du salon</div>
+    <div class="code" id="codeDisplay">-----</div>
+    <div class="row"><button class="btn ghost" id="share">Partager le lien</button><button class="btn ghost hidden" id="addBot">Ajouter un bot</button><button class="btn red" id="start">Lancer la partie</button></div>
+    <div class="plist" id="lobbyPlayers"></div>
+  </section>
+  <p id="lobbyHint"></p>
+  <button class="btn ghost" id="leaveLobby">Quitter le salon</button>
+</main>
+
+<main id="game" class="hidden">
+  <div id="opps"></div>
+  <div id="table">
+    <div id="dir" aria-hidden="true"></div>
+    <div class="pile" id="drawPile" role="button" tabindex="0" aria-label="Piocher une carte">
+      <div class="card back"><i class="oval"><span class="big">UNO</span></i></div>
+      <span class="cnt" id="deckCount"></span>
+    </div>
+    <div class="pile" id="discardWrap"><div id="ring"></div><div id="discard"></div></div>
+  </div>
+  <div id="statusBar" role="status"><div id="statusMain"></div><div id="statusLog"></div></div>
+  <div id="dock">
+    <div class="actions">
+      <button class="btn ghost hidden" id="passBtn">Passer</button>
+      <button class="uno hidden" id="unoBtn" aria-label="Crier UNO">UNO</button>
+      <button class="btn red hidden" id="catchBtn">Contre-UNO !</button>
+    </div>
+    <div id="hand"></div>
+  </div>
+</main>
+
+<div class="modal hidden" id="modal"><div class="sheet" id="sheet"></div></div>
+<div id="toast" class="hidden" role="alert"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const $ = id => document.getElementById(id);
+const FR = { red: 'Rouge', blue: 'Bleu', green: 'Vert', yellow: 'Jaune' };
+const HEX = { red: '#ed1c24', blue: '#0956bf', green: '#3fa535', yellow: '#fcd116' };
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+let S = null, wasMyTurn = false, lastTopId = null, modalKind = null, colorCardId = null, toastTimer = null;
+
+/* ---------- Cartes ---------- */
+const ICON = {
+  SKIP: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="3.6"/><path d="M6.3 17.7L17.7 6.3" stroke="currentColor" stroke-width="3.6" stroke-linecap="round"/></svg>',
+  REVERSE: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13M13 4l4 4-4 4M20 16H7M11 12l-4 4 4 4"/></svg>'
+};
+function face(c) {
+  if (c.value === 'SKIP' || c.value === 'REVERSE') return { big: ICON[c.value], small: ICON[c.value] };
+  if (c.value === 'WILD4') return { big: '+4', small: '+4' };
+  if (c.value === 'WILD') return { big: '', small: '★' };
+  const t = (c.value === '6' || c.value === '9') ? '<u>' + c.value + '</u>' : c.value;
+  return { big: t, small: t };
+}
+function cardLabel(c) {
+  const v = { SKIP: 'Passe', REVERSE: 'Inversion', WILD: 'Joker', WILD4: 'Joker +4' }[c.value] || c.value;
+  return c.color === 'wild' ? v : v + ' ' + FR[c.color].toLowerCase();
+}
+function cardEl(c) {
+  const d = document.createElement('div');
+  d.className = 'card ' + c.color;
+  const f = face(c);
+  d.innerHTML = '<i class="corner tl">' + f.small + '</i><i class="oval"><span class="big">' + f.big + '</span></i><i class="corner br">' + f.small + '</i>';
+  return d;
+}
+const ORDER = { red: 0, yellow: 1, green: 2, blue: 3, wild: 4 };
+const VRANK = v => /^\d$/.test(v) ? Number(v) : ({ '+2': 10, SKIP: 11, REVERSE: 12, WILD: 13, WILD4: 14 })[v];
+const sortHand = h => h.slice().sort((a, b) => ORDER[a.color] - ORDER[b.color] || VRANK(a.value) - VRANK(b.value));
+
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.add('hidden'), 2800);
+}
+function avatar(name, i) {
+  const d = document.createElement('div'); d.className = 'av';
+  d.style.background = Object.values(HEX)[i % 4]; if (i % 4 === 3) d.style.color = '#222';
+  d.textContent = (name[0] || '?').toUpperCase(); return d;
+}
+
+
+/* ---------- Sons et vibrations (synthétisés, aucun fichier) ---------- */
+let audio = null, muted = !!store.get('pt_mute'), prev = null;
+function ensureAudio() {
+  if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+  if (audio && audio.state === 'suspended') audio.resume();
+}
+document.addEventListener('pointerdown', ensureAudio, { passive: true });
+document.addEventListener('keydown', ensureAudio);
+function tone(f, d, type = 'sine', vol = .15, delay = 0, slideTo) {
+  if (muted || !audio) return;
+  const t = audio.currentTime + delay, o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.setValueAtTime(f, t);
+  if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + d);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g); g.connect(audio.destination); o.start(t); o.stop(t + d + .02);
+}
+function swish(d, vol, delay = 0) {
+  if (muted || !audio) return;
+  const n = Math.floor(audio.sampleRate * d), buf = audio.createBuffer(1, n, audio.sampleRate), ch = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = audio.createBufferSource(), hp = audio.createBiquadFilter(), g = audio.createGain();
+  src.buffer = buf; hp.type = 'highpass'; hp.frequency.value = 1800; g.gain.value = vol;
+  src.connect(hp); hp.connect(g); g.connect(audio.destination); src.start(audio.currentTime + delay);
+}
+const vib = p => { if (!muted && navigator.vibrate) navigator.vibrate(p); };
+const SFX = {
+  play: () => { swish(.08, .35); tone(230, .1, 'triangle', .2, 0, 110); },
+  draw: () => { swish(.14, .25); tone(420, .1, 'sine', .06, 0, 260); },
+  turn: () => { tone(660, .12, 'sine', .14); tone(880, .2, 'sine', .14, .12); vib(60); },
+  uno: () => { [523, 659, 784].forEach((f, i) => tone(f, .12, 'triangle', .16, i * .08)); tone(1047, .35, 'triangle', .16, .26); vib([40, 30, 40]); },
+  buzz: () => { tone(150, .3, 'sawtooth', .12, 0, 90); vib([60, 40, 60]); },
+  win: () => { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .22, 'triangle', .17, i * .11)); vib([100, 50, 100, 50, 220]); },
+  lose: () => { [392, 330, 262].forEach((f, i) => tone(f, .28, 'sine', .14, i * .16)); },
+  error: () => { tone(190, .14, 'square', .07); vib(80); }
+};
+function sfx(n, delay = 0) { if (muted) return; if (delay) setTimeout(() => SFX[n](), delay); else SFX[n](); }
+function updateMute() { $('mute').textContent = muted ? '🔇' : '🔊'; }
+$('mute').onclick = () => { ensureAudio(); muted = !muted; store.set('pt_mute', muted); updateMute(); if (!muted) sfx('turn'); };
+updateMute();
+function sfxFromState(s) {
+  const mine = s.me.hand.length, topId = s.top ? s.top.id : null, lastLog = s.log.length ? s.log[s.log.length - 1] : '';
+  const p = prev;
+  prev = { status: s.status, topId, mine, log: lastLog, myTurn: s.me.myTurn || !!(s.pending && s.pending.mine) };
+  if (!p) return;
+  if (s.status === 'finished' && p.status === 'playing') return sfx(s.winnerId === s.me.id ? 'win' : 'lose');
+  if (s.status !== 'playing' || p.status !== 'playing') return;
+  let played = false;
+  if (topId && topId !== p.topId) { sfx('play'); played = true; }
+  if (mine > p.mine) { if (mine - p.mine >= 2) sfx('buzz'); else if (!played) sfx('draw'); }
+  if (lastLog !== p.log) {
+    if (/surpris/.test(lastLog)) sfx('buzz', 120);
+    else if (/crie UNO/.test(lastLog)) sfx('uno', 120);
+  }
+  if (prev.myTurn && !p.myTurn) sfx('turn', played ? 320 : 0);
+}
+
+/* ---------- Actions ---------- */
+const getName = () => $('name').value.trim() || 'Joueur';
+$('name').value = store.get('pt_name') || '';
+const urlCode = new URLSearchParams(location.search).get('code');
+if (urlCode) $('joinCode').value = urlCode.toUpperCase().slice(0, 5);
+$('create').onclick = () => { store.set('pt_name', getName()); socket.emit('createRoom', { name: getName() }); };
+$('join').onclick = () => { store.set('pt_name', getName()); socket.emit('joinRoom', { name: getName(), code: $('joinCode').value }); };
+$('start').onclick = () => socket.emit('startGame');
+$('addBot').onclick = () => socket.emit('addBot');
+$('leaveLobby').onclick = () => socket.emit('leaveRoom');
+$('share').onclick = async () => {
+  const url = location.origin + '/?code=' + S.code;
+  try {
+    if (navigator.share) await navigator.share({ title: 'UNO — Play Together', text: 'Rejoins ma partie de UNO !', url });
+    else { await navigator.clipboard.writeText(url); toast('Lien copié !'); }
+  } catch (e) {}
+};
+const drawAction = () => { if (S && S.me.canDraw) socket.emit('drawCard'); };
+$('drawPile').onclick = drawAction;
+$('drawPile').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); drawAction(); } };
+$('passBtn').onclick = () => socket.emit('passTurn');
+$('unoBtn').onclick = () => socket.emit('callUno');
+$('catchBtn').onclick = () => socket.emit('catchUno');
+
+/* ---------- Réseau ---------- */
+socket.on('connect', () => { const s = store.get('pt_session'); if (s) socket.emit('rejoin', s); });
+socket.on('joined', d => store.set('pt_session', { code: d.code, token: d.token }));
+socket.on('sessionExpired', () => { store.del('pt_session'); S = null; prev = null; showScreen('entry'); });
+socket.on('left', () => { store.del('pt_session'); S = null; prev = null; modalKind = null; $('modal').classList.add('hidden'); showScreen('entry'); });
+socket.on('errorMessage', m => { toast(m); sfx('error'); });
+socket.on('connect_error', () => toast('Connexion impossible. Vérifie le serveur et l’adresse.'));
+socket.on('state', s => { S = s; render(); });
+
+function showScreen(w) {
+  $('entry').classList.toggle('hidden', w !== 'entry');
+  $('lobby').classList.toggle('hidden', w !== 'lobby');
+  $('game').classList.toggle('hidden', w !== 'game');
+  $('roomTag').textContent = w === 'game' && S ? 'Salon ' + S.code : '';
+}
+
+/* ---------- Rendu ---------- */
+function render() {
+  const s = S;
+  if (s.status === 'lobby') { showScreen('lobby'); renderLobby(); syncModal(); return; }
+  sfxFromState(s);
+  showScreen('game'); renderGame(); syncModal();
+}
+function renderLobby() {
+  $('codeDisplay').textContent = S.code;
+  const box = $('lobbyPlayers'); box.replaceChildren();
+  S.players.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'pl' + (p.connected ? '' : ' offline');
+    d.appendChild(avatar(p.name, i));
+    const t = document.createElement('div'); t.textContent = p.name;
+    const sm = document.createElement('small'); sm.textContent = p.id === S.hostId ? 'Hôte' : p.isBot ? 'Bot' : (p.connected ? 'Prêt' : 'Hors ligne'); t.appendChild(sm);
+    d.appendChild(t);
+    if (p.isBot && S.isHost) { const x = document.createElement('button'); x.className = 'rm'; x.textContent = '✕'; x.setAttribute('aria-label', 'Retirer ' + p.name); x.onclick = () => socket.emit('removeBot', { id: p.id }); d.appendChild(x); }
+    box.appendChild(d);
+  });
+  $('start').classList.toggle('hidden', !S.isHost);
+  $('addBot').classList.toggle('hidden', !S.isHost || S.players.length >= 8);
+  $('start').disabled = S.players.length < 2;
+  $('lobbyHint').textContent = S.isHost
+    ? (S.players.length < 2 ? 'Il faut au moins 2 joueurs : invite un ami ou ajoute un bot.' : 'Tout le monde est là ? Lance la partie.')
+    : 'L’hôte lancera la partie.';
+}
+function renderGame() {
+  const s = S, me = s.me;
+  // adversaires dans l'ordre de la table, à partir de ma gauche
+  const myIdx = s.players.findIndex(p => p.id === me.id);
+  const opps = []; for (let k = 1; k < s.players.length; k++) opps.push([s.players[(myIdx + k) % s.players.length], (myIdx + k) % s.players.length]);
+  const ob = $('opps'); ob.replaceChildren();
+  opps.forEach(([p, i]) => {
+    const d = document.createElement('div'); d.className = 'opp' + (p.isCurrent ? ' active' : '') + (p.connected ? '' : ' offline');
+    d.appendChild(avatar(p.name, i));
+    const nm = document.createElement('div'); nm.className = 'nm'; nm.textContent = p.name; d.appendChild(nm);
+    const mi = document.createElement('div'); mi.className = 'minis';
+    for (let k = 0; k < Math.min(p.count, 8); k++) mi.appendChild(Object.assign(document.createElement('i'), { className: 'mini' }));
+    d.appendChild(mi);
+    const sub = document.createElement('div'); sub.className = 'sub';
+    sub.textContent = p.count + (p.count > 1 ? ' cartes' : ' carte') + ' · ' + p.score + ' pts' + (p.isBot ? ' · bot' : p.connected ? '' : ' · hors ligne');
+    d.appendChild(sub);
+    if (p.uno) { const t = document.createElement('div'); t.className = 'tag'; t.textContent = 'UNO !'; d.appendChild(t); }
+    ob.appendChild(d);
+  });
+
+  // table
+  $('deckCount').textContent = s.deckCount + ' cartes';
+  $('drawPile').classList.toggle('ready', me.canDraw);
+  $('dir').textContent = s.direction === 1 ? '↻' : '↺';
+  const dc = $('discard'); dc.replaceChildren();
+  if (s.top) {
+    const el = cardEl(s.top);
+    if (s.top.id === lastTopId) el.style.animation = 'none';
+    lastTopId = s.top.id; dc.appendChild(el);
+  }
+  $('ring').style.setProperty('--rc', HEX[s.activeColor] || '#555');
+
+  // statut
+  const cur = s.players[s.current];
+  const sm = $('statusMain'); sm.classList.toggle('me', me.myTurn || !!(s.pending && s.pending.mine));
+  if (s.status === 'finished') sm.textContent = 'Manche terminée';
+  else if (s.pending) sm.textContent = s.pending.mine ? 'Défie le +4 ou pioche 4 cartes' : s.pending.targetName + ' décide face au +4 de ' + s.pending.fromName + '…';
+  else if (me.myTurn) sm.textContent = me.canPass ? 'Joue la carte piochée ou passe' : 'À toi de jouer !';
+  else sm.textContent = 'Au tour de ' + (cur ? cur.name : '') + '… Couleur : ' + (FR[s.activeColor] || '').toLowerCase();
+  $('statusLog').textContent = s.log.length ? s.log[s.log.length - 1] : '';
+
+  // boutons
+  $('passBtn').classList.toggle('hidden', !me.canPass);
+  $('unoBtn').classList.toggle('hidden', !me.canUno);
+  $('catchBtn').classList.toggle('hidden', !s.canCatch);
+
+  // main
+  const hb = $('hand'); hb.replaceChildren();
+  const canAct = me.myTurn && !s.pending && s.status === 'playing';
+  sortHand(me.hand).forEach(c => {
+    const el = cardEl(c);
+    el.setAttribute('aria-label', cardLabel(c));
+    if (c.playable) { el.classList.add('playable'); el.setAttribute('role', 'button'); el.tabIndex = 0; }
+    else if (canAct) el.classList.add('dim');
+    const play = () => {
+      if (!c.playable) return;
+      if (c.color === 'wild') { colorCardId = c.id; modalKind = 'color'; buildModal('color'); }
+      else socket.emit('playCard', { cardId: c.id });
+    };
+    el.onclick = play;
+    el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); play(); } };
+    hb.appendChild(el);
+  });
+}
+
+/* ---------- Fenêtres ---------- */
+function syncModal() {
+  let want = null;
+  if (S.status === 'finished') want = 'results';
+  else if (S.status === 'playing' && S.pending && S.pending.mine) want = 'challenge';
+  else if (modalKind === 'color' && S.me.myTurn && !S.pending) want = 'color';
+  if (want !== modalKind || want === 'results' || want === 'challenge') { modalKind = want; buildModal(want); }
+}
+function buildModal(kind) {
+  const m = $('modal'), sh = $('sheet'); sh.replaceChildren();
+  if (!kind) { m.classList.add('hidden'); return; }
+  m.classList.remove('hidden');
+  const h = t => Object.assign(document.createElement('h2'), { textContent: t });
+  const p = t => Object.assign(document.createElement('p'), { textContent: t });
+  const btn = (t, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = t; b.onclick = fn; return b; };
+  if (kind === 'color') {
+    sh.append(h('Choisis une couleur'), p('Le joker change la couleur en cours.'));
+    const g = document.createElement('div'); g.className = 'swatches';
+    Object.keys(FR).forEach(k => {
+      const b = document.createElement('button'); b.className = 'sw ' + k; b.style.background = HEX[k]; b.textContent = FR[k];
+      b.onclick = () => { socket.emit('playCard', { cardId: colorCardId, color: k }); modalKind = null; buildModal(null); };
+      g.appendChild(b);
+    });
+    sh.appendChild(g);
+    const st = document.createElement('div'); st.className = 'stack';
+    st.appendChild(btn('Annuler', 'ghost', () => { modalKind = null; buildModal(null); }));
+    sh.appendChild(st);
+  } else if (kind === 'challenge') {
+    sh.append(h(S.pending.fromName + ' joue un +4'), p('Si tu penses qu’il avait une carte de la couleur précédente, défie-le. Défi raté : tu pioches 6 cartes.'));
+    const st = document.createElement('div'); st.className = 'stack';
+    st.append(btn('Défier', 'red', () => socket.emit('challenge')), btn('Piocher 4', 'ghost', () => socket.emit('acceptDraw4')));
+    sh.appendChild(st);
+  } else if (kind === 'results') {
+    const w = S.players.find(x => x.id === S.winnerId);
+    sh.append(h('🏆 ' + (w ? w.name : '') + ' gagne !'), p('+' + S.roundPoints + ' points pour cette manche.'));
+    S.players.slice().sort((a, b) => b.score - a.score).forEach(pl => {
+      const r = document.createElement('div'); r.className = 'score' + (pl.id === S.winnerId ? ' win' : '');
+      const a = document.createElement('span'); a.textContent = pl.name + (pl.id === S.me.id ? ' (toi)' : '');
+      const b = document.createElement('b'); b.textContent = pl.score + ' pts';
+      r.append(a, b); sh.appendChild(r);
+    });
+    const st = document.createElement('div'); st.className = 'stack';
+    if (S.isHost) st.appendChild(btn('Manche suivante', 'red', () => socket.emit('startGame')));
+    else sh.appendChild(p('En attente de l’hôte…'));
+    st.appendChild(btn('Quitter', 'ghost', () => socket.emit('leaveRoom')));
+    sh.appendChild(st);
+  }
+}
+</script>
+</body></html>

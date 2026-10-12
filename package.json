@@ -1,0 +1,13 @@
+{
+  "name": "play-together-online",
+  "version": "0.3.0",
+  "private": true,
+  "description": "UNO multijoueur en ligne — Play Together",
+  "main": "server.js",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}
